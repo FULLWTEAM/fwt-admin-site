@@ -34,9 +34,15 @@ const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||DEF}catch(e){r
 const LKEY="fwt-admin-login";
 const hs=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x};
 const GK="fwt-gh";
-const GD={owner:"",repo:"",branch:"main",path:"config.json",token:"",auto:false};
+const GD={owner:"",repo:"",branch:"main",path:"config.json",token:"",auto:true,link:""};
 const ghLoad=()=>{try{return {...GD,...JSON.parse(localStorage.getItem(GK))}}catch(e){return GD}};
 const b64=s=>btoa(unescape(encodeURIComponent(s)));
+const parseRepo=s=>{s=(s||"").trim();let m=s.match(/github\.com\/([^\/\s]+)\/([^\/\s#?]+)/i);if(m)return{owner:m[1],repo:m[2].replace(/\.git$/,"")};m=s.match(/([^\/\s.]+)\.github\.io\/([^\/\s#?]+)/i);if(m)return{owner:m[1],repo:m[2]};return null};
+async function ghGet(g){
+ const u="https://api.github.com/repos/"+g.owner.trim()+"/"+g.repo.trim()+"/contents/"+g.path.trim().replace(/^\/+/,"");
+ const r=await fetch(u+"?ref="+encodeURIComponent(g.branch.trim()),{headers:{Authorization:"Bearer "+g.token.trim(),Accept:"application/vnd.github+json"},cache:"no-store"});
+ if(!r.ok)throw new Error(r.status===401?"Token inválido ou expirado.":r.status===404?"Ficheiro ou repositório não encontrado.":"Erro "+r.status+" ao ler o site.");
+ const j=await r.json();return JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,"")))))}
 async function ghPut(g,txt){
  const u="https://api.github.com/repos/"+g.owner.trim()+"/"+g.repo.trim()+"/contents/"+g.path.trim().replace(/^\/+/,"");
  const H={Authorization:"Bearer "+g.token.trim(),Accept:"application/vnd.github+json"};
@@ -97,18 +103,19 @@ function Links({c,setC}){
 }
 
 function Publish({c,setC,gh}){
- const {g,setG,st,pub}=gh;const S=k=>v=>setG({...g,[k]:v});
+ const {g,setG,st,pub,pull}=gh;const lk=g.link||(g.owner&&g.repo?"https://github.com/"+g.owner+"/"+g.repo:"");const ready=!!(g.owner&&g.repo&&g.token);const S=k=>v=>setG({...g,[k]:v});
  const txt=JSON.stringify(c,null,2);const [imp,setImp]=useState("");const [msg,setMsg]=useState("");const [rs,setRs]=useState(false);
  const say=m=>{setMsg(m);setTimeout(()=>setMsg(""),2500)};
  const cp=async()=>{try{await navigator.clipboard.writeText(txt)}catch(e){const o=document.getElementById("out");o.select();document.execCommand("copy")}say("Copiado!")};
  const dl=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"}));a.download="config.json";a.click();say("A descarregar config.json…")};
  const ap=()=>{try{const j=JSON.parse(imp);if(!j.maps||!j.accounts)throw 0;setC({...DEF,...j});setImp("");say("Configuração importada.")}catch(e){say("JSON inválido.")}};
- return html`<div class="space-y-4 fade"><div class="glass p-6 space-y-3"><h2 class="font-bold text-xl">Publicação automática (GitHub)</h2>
-  <p class="text-sm" style=${{color:M}}>Liga o painel ao repositório do site. Cada alteração é enviada sozinha e o Netlify atualiza o site em cerca de 1 minuto.</p>
-  <div class="grid gap-3 sm:grid-cols-2">${F("Utilizador GitHub",g.owner,S("owner"))}${F("Repositório",g.repo,S("repo"))}${F("Branch",g.branch,S("branch"))}${F("Ficheiro no repositório",g.path,S("path"))}</div>
-  ${F("Token de acesso (Contents: Read and write)",g.token,S("token"),{type:"password",autocomplete:"off"})}
-  <div class="flex items-center gap-3 cursor-pointer select-none" onClick=${()=>setG({...g,auto:!g.auto})}><div class=${"sw "+(g.auto?"on":"")}><i></i></div><span class="text-sm">Publicar automaticamente ao alterar</span></div>
-  <div class="flex gap-3 items-center flex-wrap"><button class="btn tap" disabled=${st.s==="run"} onClick=${pub}><${I} n="check"/> Publicar agora</button>${st.s!=="idle"&&html`<span class="text-sm" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}</div>
+ return html`<div class="space-y-4 fade"><div class="glass p-6 space-y-3"><div class="flex items-center justify-between gap-3"><h2 class="font-bold text-xl">Publicação automática</h2><span class="text-xs font-bold px-3 py-1 rounded-full" style=${{background:ready&&g.auto?"rgba(115,230,57,.18)":"rgba(255,255,255,.1)",color:ready&&g.auto?"var(--g)":M}}>${ready?(g.auto?"Ligada":"Desligada"):"Por configurar"}</span></div>
+  <p class="text-sm" style=${{color:M}}>Cola o link do repositório e o token uma só vez. Depois, tudo o que alterares no painel é enviado ao site sozinho e fica online em cerca de 1 minuto.</p>
+  ${F("Link do repositório ou do site (GitHub)",lk,v=>{const r=parseRepo(v);setG({...g,link:v,...(r||{})})},{placeholder:"https://github.com/utilizador/fwtsite"})}
+  ${F("Token do GitHub (Contents: Read and write)",g.token,S("token"),{type:"password",autocomplete:"off"})}
+  <div class="flex items-center gap-3 cursor-pointer select-none" onClick=${()=>setG({...g,auto:!g.auto})}><div class=${"sw "+(g.auto?"on":"")}><i></i></div><span class="text-sm">Atualizar o site automaticamente</span></div>
+  <div class="flex gap-2 items-center flex-wrap"><button class="btn tap" disabled=${st.s==="run"} onClick=${pub}><${I} n="check"/> Publicar agora</button><button class="ghost tap" disabled=${!ready||st.s==="run"} onClick=${pull}><${I} n="dl"/> Carregar config do site</button>${st.s!=="idle"&&html`<span class="text-sm" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}</div>
+  <details class="text-sm" style=${{color:M}}><summary class="cursor-pointer">Avançado</summary><div class="grid gap-3 sm:grid-cols-2 mt-3">${F("Branch",g.branch,S("branch"))}${F("Ficheiro no repositório",g.path,S("path"))}</div></details>
   <p class="text-xs" style=${{color:M}}>O token fica só neste dispositivo e nunca vai para o config.json. Abre o painel a partir do ficheiro do zip: a página do Claude bloqueia ligações à internet.</p></div>
   <div class="glass p-6 space-y-3"><h2 class="font-bold text-xl">Publicar manualmente (alternativa)</h2>
   <ol class="list-decimal pl-5 text-sm space-y-1" style=${{color:M}}><li>Faz as alterações nas outras abas (ficam guardadas neste dispositivo).</li><li>Descarrega ou copia o <b>config.json</b> abaixo.</li><li>Substitui o config.json da app no alojamento (ex.: Netlify → arrasta a pasta de novo).</li><li>Quem tiver a app aberta recebe o aviso "Nova versão disponível".</li></ol>
@@ -123,19 +130,22 @@ function App(){
  useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}},[c]);
  const txt=JSON.stringify(c,null,2);const [g,setG]=useState(ghLoad);const [st,setSt]=useState({s:"idle",m:""});const last=useRef(txt);
  useEffect(()=>{try{localStorage.setItem(GK,JSON.stringify(g))}catch(e){}},[g]);
+ const pull=async()=>{
+  try{setSt({s:"run",m:"A carregar do site…"});const j=await ghGet(g);const n={...DEF,...j};last.current=JSON.stringify(n,null,2);setC(n);setSt({s:"ok",m:"Configuração carregada do site."})}
+  catch(e){setSt({s:"err",m:e instanceof TypeError?"Sem ligação à internet ou bloqueada (abre o painel a partir do ficheiro).":e.message})}};
  const pub=async()=>{
   if(!g.owner.trim()||!g.repo.trim()||!g.token.trim()){setSt({s:"err",m:"Preenche utilizador, repositório e token."});return}
   setSt({s:"run",m:"A publicar…"});
   try{await ghPut(g,txt);last.current=txt;setSt({s:"ok",m:"Publicado às "+new Date().toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"})+" · o site atualiza em ~1 min"})}
   catch(e){setSt({s:"err",m:e instanceof TypeError?"Sem ligação à internet ou bloqueada (abre o painel a partir do ficheiro).":e.message})}};
- useEffect(()=>{if(!g.auto||!ok||txt===last.current)return;const t=setTimeout(pub,2500);return()=>clearTimeout(t)},[txt,JSON.stringify(g),ok]);
+ useEffect(()=>{if(!g.auto||!ok||!g.owner||!g.repo||!g.token||txt===last.current)return;const t=setTimeout(pub,2500);return()=>clearTimeout(t)},[txt,JSON.stringify(g),ok]);
  if(!ok)return html`<${Gate} accts=${c.accounts} onOk=${()=>setOk(true)}/>`;
  const T=[["maps","Mapas"],["accts","Contas e Roster"],["links","Ligações e Anúncio"],["pub","Publicar"]];
  const B={maps:Maps,accts:Accts,links:Links,pub:Publish}[tab];
  return html`<div class="max-w-4xl mx-auto p-4 sm:p-6 space-y-4">
-  <header class="glass flex items-center gap-3 px-4 py-3" style=${{borderRadius:26}}><${Logo}/><b>FWT Admin</b>${st.s!=="idle"&&html`<span class="text-xs ml-2 hidden sm:inline" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}<button class="ghost tap ml-auto" onClick=${()=>{try{localStorage.removeItem(LKEY)}catch(e){}setOk(false)}}><${I} n="out"/> Sair</button></header>
+  <header class="glass flex items-center gap-3 px-4 py-3" style=${{borderRadius:26}}><${Logo}/><b>FWT Admin</b>${st.s!=="idle"&&html`<span class="text-xs ml-2 hidden sm:inline" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}${st.s==="idle"&&!(g.owner&&g.token)&&html`<button class="text-xs ml-2 hidden sm:inline" style=${{color:"#F5A524"}} onClick=${()=>setTab("pub")}>Não ligado ao GitHub</button>`}<button class="ghost tap ml-auto" onClick=${()=>{try{localStorage.removeItem(LKEY)}catch(e){}setOk(false)}}><${I} n="out"/> Sair</button></header>
   <nav class="glass nav flex gap-1 p-1.5" style=${{borderRadius:22}}>${T.map(([id,l])=>html`<button key=${id} onClick=${()=>setTab(id)} class="tap px-4 py-2 rounded-2xl text-sm font-semibold whitespace-nowrap" style=${{background:tab===id?"var(--g)":"transparent",color:tab===id?"#0d1a04":"var(--tx)"}}>${l}</button>`)}</nav>
-  <${B} c=${c} setC=${setC} gh=${{g,setG,st,pub}}/></div>`;
+  <${B} c=${c} setC=${setC} gh=${{g,setG,st,pub,pull}}/></div>`;
 }
 ReactDOM.createRoot(document.getElementById("root")).render(html`<${App}/>`);
 </script></body></html>
