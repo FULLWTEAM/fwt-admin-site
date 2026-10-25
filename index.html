@@ -2,6 +2,7 @@
 <html lang="pt-PT"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>FWT Admin</title>
+<link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAFIklEQVR42u2ay2vcVRTHP+f+XjOZpJPHJBrEoH0qtmZR6KJoKQm2O0Ep1I2lpQjiX9GFK6ELUUQI2ehCUXDrK9au3Fgo3bQFddFYWptJ83A6j9/rXhe/ZCZ9JKYzmUnS/g7Mbjj3fj+/c8859/x+MjIyYniKTfGUWwogBZACSAGkAFIAKYAUQAogBZACSAGkAFIATZhsIsKNWLslF8ZAUErmKWJ1UPjSWkHJYPQmATAxuN3CyLEsRoM/r9sOYtm3v6DRkWHkWBYvrzCx6TAAAQyILRz+aIDjXw+x860cRhv8hY0HsVK4iQ0738xx/KtneO38AMoliQJpzrfd/K4SCGFJU3jV5cjHBWav+Fz/ssT091X8eY3ToxBpTbwxECz52n0ix0vv9lAY9UAMlX90S+JbA7AiEYVlgwkN/a+4vH6+wN0zAde/KDH9UwUdtLBBA5YLL77Tzb5TPRQOuMShIVjUiLMFkuBKCGJBVEmOQO8ehyOfFDh0rp+oZpraqCiIaoZD5/o58mmBvr0O/oImqhjE2rjqY29oklraVFgxiKXJDqiWwhOB7IAiLGnCikHZjcjY0o2QqOSnwzX+I0tHQ1gzT+iw4a8dZtNOk9UBxYFpPEkBy5VH13Rp6w7bDGCVkhaWDPndNrnhZPny7YjFPyOcHsHET/BdQCyIqgY3rxifGKJ3r0PvXofxiSHcvCKqmo52lB0FsCze26EYnxyksN8lKGmCkqaw32V8chBvR+chqM6Il7r4sclBCqMuflmjLEFZgl/WFEZdxu6DIE8GAGVBVNErxHv4C7pR0gBlJ21uYdRrQKholLXNASw3R27+QfEPP11ly30Q3LyqNz3bE4CSRsKbHHrkk38YQiMSxicbiRHVvuPQnjIoYEJDpk8xNpGc+drc2uIfhuAyNjGIshNf7eoH2gJAJMn4/QdclBL8+fWJvw/CvGbooIfWJkmK2wlAIwogMs2dY7GSy1C9Zd6WneAaff7Ktne1sVYn5o2bMtI0MdgZqV9y7EznW+BNuwvoCLw+xZ1LPjd/rQJw55JP3z4Xf/HxcsXWiADzmOJ7FXNXA6ZOF6nMxFRmYqZOF5m7GuD1KnTUnrXbAkAExE5C+v82syx+9orP1Jkitbsxdlaws0LtbszUmSKzV/z1QTDJmmLTcnVoHoBA7BuCRUOmX6EcWRXEsvjiZZ8LZ4v48zF2V/J/E4PdJfjzMRfOFileXgOCAR2DOILXrwj+1cR+ayXSyufz55qd+sQBTP9YwV/Q5Hc5dD1rYWLqg1CRRHymTzFzyefCe0WCkq6LXynM8oSwbLjxQ5Whgx69u5xktKaSyTA6GZq4eUV1JubaZInfP5zHXzCILU0fB2npU1kBHRqisiH3nMXuE93sOdlNzws2UcUQlTWZgsXt32pcfL9IVDVYa2R8sSCuGeyscPTzQYYPZ6jNxtg5hd0llG5E/PHNPf76tsy9mxF2TlCOtJQLpOVvhQXUUjSE9zRdwxa73s6x52Q3/S+7/P1LhYsfzBLX1hb/IAQrIxz9rMDz413MXQsS4d+VqdyKcXKC5Qlat54IZcM+lpZk89qHoKTJDVuMHOti+ufkiNjZ9df6+vCkVzHyRuKjfCvG7VGNN0EbNBmWDf9aXJYmwgGEZY3TrZILjX78HKOjJKqcnEJ566s2m98IrShRXp/CaJp6g2t0Egl1HxFtsfb1XUsgNt3HVrwLbCVLAaQAUgApgBRACiAFkAJIAaQAUgApgBTA02j/AYjiO8aq+i2WAAAAAElFTkSuQmCC">
 <script src="https://cdn.tailwindcss.com/3.4.17"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
@@ -61,6 +62,8 @@ async function ghPut(g,txt){
  }
  throw new Error("Conflito ao gravar. Tenta de novo.");
 }
+const dbn=s=>{let u=(s||"").trim().replace(/\.json.*$/,"").replace(/\/(chat|profiles)(\/.*)?$/,"").replace(/\/+$/,"");if(u&&!/^https?:\/\//i.test(u))u="https://"+u;return u};
+const dbOk=u=>/^https:\/\/[a-z0-9.-]+\.(firebaseio\.com|firebasedatabase\.app)$/i.test(u);
 const AvA=({a,s=40})=>a&&a.avatar?html`<img src=${a.avatar} alt="" style=${{width:s,height:s,borderRadius:"30%",objectFit:"cover",flex:"none"}}/>`:html`<div style=${{width:s,height:s,borderRadius:"30%",flex:"none",background:"linear-gradient(135deg,#73E639,#1f6d0f)",color:"#0d1a04",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800}}>${((a&&a.disp)||"?").charAt(0).toUpperCase()}</div>`;
 const pickImg=(f,cb)=>{if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(im.width,im.height),c=document.createElement("canvas");c.width=c.height=128;c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);cb(c.toDataURL("image/jpeg",.78))};im.src=r.result};r.readAsDataURL(f)};
 function Gate({accts,onOk}){
@@ -133,7 +136,9 @@ function MenuTab({c,setC}){
    ${x.kind==="page"&&html`<div class="space-y-3">${F("Título da página",x.title,v=>up(i,{title:v}))}<textarea class="inp" rows="4" placeholder="Texto da página" value=${x.text} onInput=${e=>up(i,{text:e.target.value})}></textarea>
     <div class="grid gap-3 sm:grid-cols-2">${F("Texto do botão (opcional)",x.btnLabel,v=>up(i,{btnLabel:v}))}${F("Link do botão (opcional)",x.btnUrl,v=>up(i,{btnUrl:v}))}</div></div>`}</div>`)}</div>`;
 }
-function Links({c,setC}){
+function Links({c,setC}){const [tst,setTst]=useState("");
+ const test=async()=>{const u=dbn(c.links.db);if(!u){setTst("Cola primeiro o URL.");return}if(!dbOk(u)){setTst("Esse não parece o URL da base de dados (tem de terminar em firebasedatabase.app ou firebaseio.com). O link da consola não serve.");return}
+  setTst("A testar…");try{const r=await fetch(u+"/chat.json?orderBy=%22%24key%22&limitToLast=1",{cache:"no-store"});setTst(r.ok?"✔ Ligação OK. O chat deve funcionar.":r.status===401||r.status===403?"A base de dados existe, mas as regras bloqueiam a leitura. Publica as regras no Firebase.":r.status===404?"Base de dados não encontrada (404). Confirma o URL.":"Erro "+r.status+".")}catch(e){setTst("Não consegui contactar esse endereço. Confirma o URL.")}};
  const L=(p)=>setC({...c,links:{...c.links,...p}});
  return html`<div class="glass p-6 space-y-4 fade"><h2 class="font-bold text-xl">Ligações e Anúncio</h2>
   ${F("Convite do Discord",c.links.discord,v=>L({discord:v}))}${F("Link do Grupo Steam",c.links.steam,v=>L({steam:v}))}${F("Nome do grupo",c.links.gname,v=>L({gname:v}))}
@@ -141,6 +146,7 @@ function Links({c,setC}){
   <div class="grid gap-3 sm:grid-cols-2">${F("Discord · Online agora",c.links.dOnline,v=>L({dOnline:v}))}${F("Discord · Membros",c.links.dMembers,v=>L({dMembers:v}))}${F("Discord · Canais de voz",c.links.dVoice,v=>L({dVoice:v}))}${F("Steam · Membros do grupo",c.links.gMembers,v=>L({gMembers:v}))}</div>
   <div class="pt-2 font-bold">Serviços (chat, perfis e FACEIT)</div>
   ${F("URL da base de dados Firebase (chat e perfis)",c.links.db,v=>L({db:v}),{placeholder:"https://xxxx-default-rtdb.europe-west1.firebasedatabase.app"})}
+  <div class="flex gap-2 items-center flex-wrap"><button class="ghost tap" onClick=${test}><${I} n="check"/> Testar ligação</button>${tst&&html`<span class="text-sm" style=${{color:tst.startsWith("✔")?"var(--g)":"#f87171"}}>${tst}</span>`}</div>
   ${F("Chave da API FACEIT (Data API)",c.links.fkey,v=>L({fkey:v}))}
   <p class="text-xs" style=${{color:M}}>Estes valores vão para o config.json e ficam visíveis a quem abrir o site.</p>
   <label class="block"><span class="text-xs font-semibold px-1" style=${{color:M}}>Anúncio no Hub (vazio = escondido)</span><textarea class="inp mt-1" rows="3" value=${c.news} onInput=${e=>setC({...c,news:e.target.value})}></textarea></label></div>`;
