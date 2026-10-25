@@ -1,5 +1,5 @@
 FWT ADMIN - PAINEL DE GESTAO
-1. Abre o index.html no navegador (duplo clique ou no telemovel a partir dos ficheiros). Nao o alojes junto do site publico.
-2. Separador Publicar: cola o link do repositorio GitHub e o token. A atualizacao automatica vem ligada.
-3. Separadores: Mapas, Contas e Roster (podes mudar nomes de utilizador), Menu e Site (paginas e links no menu, ordem, textos), Ligacoes e Anuncio, Publicar.
-4. Carrega primeiro a config do site (botao em Publicar) antes de editar.
+1. Abre o index.html no navegador. Nao o alojes junto do site publico.
+2. Publicar: cola o link do repositorio GitHub e o token; a atualizacao automatica vem ligada.
+3. Contas e Roster: imagem, bio, nick FACEIT e nome de utilizador de cada pessoa.
+4. Ligacoes e Anuncio: numeros do Discord/Steam, URL do Firebase e chave FACEIT.
