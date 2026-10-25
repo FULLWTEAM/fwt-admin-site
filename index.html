@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="pt-PT"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>FWT Admin</title>
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/htm@3.1.1/dist/htm.js"></script>
+<style>
+:root{--g:#73E639;--tx:#F4F6F2;--mut:#9aa097;box-sizing:border-box;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;color:var(--tx);font-family:-apple-system,"SF Pro Display",Inter,system-ui,sans-serif;min-height:100vh;background:radial-gradient(60% 50% at 15% 10%,rgba(115,230,57,.25),transparent 70%),linear-gradient(160deg,#262626,#151515) fixed;overflow-x:hidden}
+.glass{position:relative;background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.03));backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,.14);border-radius:28px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.4),0 20px 50px -20px rgba(0,0,0,.7)}
+.tap{transition:transform .2s cubic-bezier(.34,1.56,.64,1)}.tap:active{transform:scale(.94)}
+.btn{background:var(--g);color:#0d1a04;font-weight:700;border-radius:18px;padding:.65rem 1.1rem;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),0 8px 24px -8px rgba(115,230,57,.7);display:inline-flex;align-items:center;gap:.5rem;justify-content:center}
+.ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--tx);border-radius:16px;padding:.5rem .85rem;display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem}
+.inp{width:100%;background:rgba(0,0,0,.28);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:.7rem 1rem;color:var(--tx);outline:none;font:inherit}
+.inp:focus{border-color:var(--g);box-shadow:0 0 0 3px rgba(115,230,57,.22)}
+.sw{width:50px;height:30px;border-radius:99px;background:rgba(255,255,255,.18);position:relative;transition:background .3s;flex:none}
+.sw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .35s cubic-bezier(.34,1.56,.64,1)}
+.sw.on{background:var(--g)}.sw.on i{transform:translateX(20px)}
+.fade{animation:f .45s cubic-bezier(.22,1,.36,1) both}@keyframes f{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+.nav{overflow-x:auto;scrollbar-width:none}
+</style></head><body><div id="root"></div>
+<script>
+const {useState,useEffect,useRef}=React;const html=htm.bind(React.createElement);
+const DEF={"maps": [{"id": 1, "nome": "Mirage", "tipo": "Granadas", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Smokes, molotovs e flashes para execuções A e B. Lineups marcados no chão.", "on": true}, {"id": 2, "nome": "Aim_Botz", "tipo": "Aim/Mira", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Bots configuráveis para treino de spray control e flicks a diferentes distâncias.", "on": true}, {"id": 3, "nome": "Inferno", "tipo": "Retake", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Cenários de retake 3v4 nos bombsites A e B com utilitário limitado.", "on": true}, {"id": 4, "nome": "Dust2", "tipo": "Posicionamento", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Ângulos, off-angles e posições de hold para CT e T.", "on": false}], "accounts": {"konkelfwt": {"pass": "konkelFWT2026", "admin": true, "disp": "Konkel", "steam": "https://steamcommunity.com/id/konkelfwt/", "email": "", "phone": ""}, "fergod99fwt": {"pass": "fergod991", "disp": "FerGod", "steam": "https://steamcommunity.com/profiles/76561199682614793", "email": "", "phone": ""}, "leodobigodefwt": {"pass": "bigode123", "disp": "Leo do Bigode", "steam": "https://steamcommunity.com", "email": "", "phone": ""}, "oliveirexfwt": {"pass": "oliveirafwt", "disp": "Oliveirex", "steam": "https://steamcommunity.com", "email": "", "phone": ""}, "oleofwt": {"pass": "manuoleofwt", "disp": "Oleo", "steam": "https://steamcommunity.com/profiles/76561199871391790", "email": "", "phone": ""}, "pixkitofwt": {"pass": "pixkofwt", "disp": "Pixkito", "steam": "https://steamcommunity.com/id/pixkito", "email": "", "phone": ""}}, "roster": ["konkelfwt", "fergod99fwt", "leodobigodefwt", "oleofwt", "pixkitofwt"], "links": {"discord": "https://discord.gg/NgYBeKcKzn", "steam": "https://steamcommunity.com/groups/fullwteam", "gname": "FULL W TEAM | FWT"}, "news": ""};const KEY="fwt-admin-cfg";const M="var(--mut)";
+const TYPES=["Granadas","Aim/Mira","Retake","Posicionamento"];
+const P={plus:"M12 5v14M5 12h14",trash:"M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2",copy:"M9 9h11v11H9zM5 15H4V4h11v1",dl:"M12 3v12M7 10l5 5 5-5M4 21h16",out:"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",lock:"M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4",check:"M20 6L9 17l-5-5"};
+const I=({n,s=16})=>html`<svg width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d=${P[n]}/></svg>`;
+const Logo=({s=34})=>html`<svg width=${s} height=${s*.847} viewBox="148 164 203 172" fill="#73E639"><polygon points="148,164 197,188 197,262 246,213 246,288 197,336 148,312"/><polygon points="351,164 302,188 302,262 253,213 253,288 302,336 351,312"/></svg>`;
+const F=(l,v,f,o={})=>html`<label class="block"><span class="text-xs font-semibold px-1" style=${{color:M}}>${l}</span><input class="inp mt-1" value=${v||""} onInput=${e=>f(e.target.value)} ...${o}/></label>`;
+const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||DEF}catch(e){return DEF}};
+
+const LKEY="fwt-admin-login";
+const hs=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x};
+const GK="fwt-gh";
+const GD={owner:"",repo:"",branch:"main",path:"config.json",token:"",auto:false};
+const ghLoad=()=>{try{return {...GD,...JSON.parse(localStorage.getItem(GK))}}catch(e){return GD}};
+const b64=s=>btoa(unescape(encodeURIComponent(s)));
+async function ghPut(g,txt){
+ const u="https://api.github.com/repos/"+g.owner.trim()+"/"+g.repo.trim()+"/contents/"+g.path.trim().replace(/^\/+/,"");
+ const H={Authorization:"Bearer "+g.token.trim(),Accept:"application/vnd.github+json"};
+ for(let i=0;i<2;i++){
+  let sha;const r=await fetch(u+"?ref="+encodeURIComponent(g.branch.trim()),{headers:H,cache:"no-store"});
+  if(r.ok)sha=(await r.json()).sha;else if(r.status!==404)throw new Error(r.status===401?"Token inválido ou expirado.":r.status===403?"Sem permissão: o token precisa de Contents: Read and write.":"Erro "+r.status+" ao ler o repositório.");
+  const w=await fetch(u,{method:"PUT",headers:{...H,"Content-Type":"application/json"},body:JSON.stringify({message:"Atualização via FWT Admin",content:b64(txt),branch:g.branch.trim(),...(sha?{sha}:{})})});
+  if(w.ok)return;
+  if(w.status===404)throw new Error("Repositório, branch ou token não encontrados.");
+  if(w.status!==409&&w.status!==422)throw new Error("Erro "+w.status+" ao gravar.");
+ }
+ throw new Error("Conflito ao gravar. Tenta de novo.");
+}
+function Gate({accts,onOk}){
+ const [u,setU]=useState("");const [p,setP]=useState("");const [e,setE]=useState(false);const [rm,setRm]=useState(false);
+ const go=()=>{const k=u.trim().toLowerCase(),a=accts[k];if(a&&a.admin&&a.pass===p){try{rm?localStorage.setItem(LKEY,JSON.stringify({u:k,h:hs(p)})):localStorage.removeItem(LKEY)}catch(x){}onOk()}else setE(true)};
+ return html`<div class="min-h-screen flex items-center justify-center p-5"><div class="glass fade w-full max-w-sm p-8 space-y-3">
+  <div class="flex flex-col items-center mb-3"><${Logo} s=${52}/><h1 class="text-2xl font-extrabold mt-3">FWT Admin</h1><p class="text-sm" style=${{color:M}}>Consola de gestão</p></div>
+  <input class="inp" placeholder="Utilizador admin" autocapitalize="none" value=${u} onInput=${x=>{setU(x.target.value);setE(false)}}/>
+  <input class="inp" type="password" placeholder="Palavra-passe" value=${p} onInput=${x=>{setP(x.target.value);setE(false)}} onKeyDown=${x=>x.key==="Enter"&&go()}/>
+  ${e&&html`<p class="text-sm text-red-400 px-1">Credenciais de admin incorretas.</p>`}
+  <div role="switch" aria-checked=${rm} class="flex items-center justify-between px-1 cursor-pointer select-none" onClick=${()=>setRm(!rm)}><span class="text-sm">Memorizar login e palavra-passe</span><div class=${"sw "+(rm?"on":"")}><i></i></div></div>
+  <button class="btn tap w-full" onClick=${go}><${I} n="lock"/> Entrar</button></div></div>`;
+}
+
+function Maps({c,setC}){
+ const up=(i,p)=>setC({...c,maps:c.maps.map((m,j)=>j===i?{...m,...p}:m)});
+ return html`<div class="space-y-4 fade"><div class="flex justify-between items-center"><h2 class="font-bold text-xl">Mapas de Treino (${c.maps.length})</h2>
+  <button class="btn tap" onClick=${()=>setC({...c,maps:[...c.maps,{id:Date.now(),nome:"Novo mapa",tipo:TYPES[0],link:"",desc:"",on:false}]})}><${I} n="plus"/> Novo mapa</button></div>
+  ${c.maps.map((m,i)=>html`<div key=${m.id} class="glass p-5 space-y-3" style=${{borderRadius:24}}>
+   <div class="grid gap-3 sm:grid-cols-3">${F("Nome",m.nome,v=>up(i,{nome:v}))}
+    <label class="block"><span class="text-xs font-semibold px-1" style=${{color:M}}>Tipo</span><select class="inp mt-1" value=${m.tipo} onChange=${e=>up(i,{tipo:e.target.value})}>${TYPES.map(t=>html`<option key=${t} style=${{background:"#1E1E1E"}}>${t}</option>`)}</select></label>
+    ${F("Link da Oficina",m.link,v=>up(i,{link:v}))}</div>
+   <textarea class="inp" rows="2" placeholder="Descrição técnica" value=${m.desc} onInput=${e=>up(i,{desc:e.target.value})}></textarea>
+   <div class="flex items-center justify-between"><div class="flex items-center gap-3"><button class=${"sw tap "+(m.on?"on":"")} aria-label="Visível" onClick=${()=>up(i,{on:!m.on})}><i></i></button><span class="text-sm" style=${{color:M}}>${m.on?"Visível no app":"Oculto"}</span></div>
+   <button class="ghost tap" style=${{color:"#f87171"}} onClick=${()=>setC({...c,maps:c.maps.filter((_,j)=>j!==i)})}><${I} n="trash"/> Remover</button></div></div>`)}</div>`;
+}
+
+function Accts({c,setC}){
+ const [nu,setNu]=useState("");
+ const up=(k,p)=>setC({...c,accounts:{...c.accounts,[k]:{...c.accounts[k],...p}}});
+ const rost=k=>setC({...c,roster:c.roster.includes(k)?c.roster.filter(x=>x!==k):[...c.roster,k]});
+ const del=k=>{const a={...c.accounts};delete a[k];setC({...c,accounts:a,roster:c.roster.filter(x=>x!==k)})};
+ const add=()=>{const k=nu.trim().toLowerCase().replace(/\s+/g,"");if(!k||c.accounts[k])return;setC({...c,accounts:{...c.accounts,[k]:{pass:"mudar123",disp:nu.trim(),steam:"https://steamcommunity.com",email:"",phone:""}}});setNu("")};
+ return html`<div class="space-y-4 fade"><h2 class="font-bold text-xl">Contas e Roster</h2>
+  <div class="flex gap-2"><input class="inp" placeholder="novo utilizador (ex: joaofwt)" value=${nu} onInput=${e=>setNu(e.target.value)}/><button class="btn tap" onClick=${add}><${I} n="plus"/> Criar</button></div>
+  ${Object.keys(c.accounts).map(k=>{const a=c.accounts[k];return html`<div key=${k} class="glass p-5 space-y-3" style=${{borderRadius:24}}>
+   <div class="flex items-center justify-between"><b style=${{color:"var(--g)"}}>@${k}</b>${k!=="konkelfwt"&&html`<button class="ghost tap" style=${{color:"#f87171"}} onClick=${()=>del(k)}><${I} n="trash"/> Remover</button>`}</div>
+   <div class="grid gap-3 sm:grid-cols-3">${F("Nome de exibição",a.disp,v=>up(k,{disp:v}))}${F("Password",a.pass,v=>up(k,{pass:v}))}${F("Link Steam",a.steam,v=>up(k,{steam:v}))}</div>
+   <div class="flex gap-5 text-sm flex-wrap"><label class="flex items-center gap-2"><input type="checkbox" checked=${!!a.admin} disabled=${k==="konkelfwt"} onChange=${e=>up(k,{admin:e.target.checked})}/> Admin</label><label class="flex items-center gap-2"><input type="checkbox" checked=${c.roster.includes(k)} onChange=${()=>rost(k)}/> Aparece no Roster</label></div></div>`})}</div>`;
+}
+
+function Links({c,setC}){
+ const L=(p)=>setC({...c,links:{...c.links,...p}});
+ return html`<div class="glass p-6 space-y-4 fade"><h2 class="font-bold text-xl">Ligações e Anúncio</h2>
+  ${F("Convite do Discord",c.links.discord,v=>L({discord:v}))}${F("Link do Grupo Steam",c.links.steam,v=>L({steam:v}))}${F("Nome do grupo",c.links.gname,v=>L({gname:v}))}
+  <label class="block"><span class="text-xs font-semibold px-1" style=${{color:M}}>Anúncio no Hub (vazio = escondido)</span><textarea class="inp mt-1" rows="3" value=${c.news} onInput=${e=>setC({...c,news:e.target.value})}></textarea></label></div>`;
+}
+
+function Publish({c,setC,gh}){
+ const {g,setG,st,pub}=gh;const S=k=>v=>setG({...g,[k]:v});
+ const txt=JSON.stringify(c,null,2);const [imp,setImp]=useState("");const [msg,setMsg]=useState("");const [rs,setRs]=useState(false);
+ const say=m=>{setMsg(m);setTimeout(()=>setMsg(""),2500)};
+ const cp=async()=>{try{await navigator.clipboard.writeText(txt)}catch(e){const o=document.getElementById("out");o.select();document.execCommand("copy")}say("Copiado!")};
+ const dl=()=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([txt],{type:"application/json"}));a.download="config.json";a.click();say("A descarregar config.json…")};
+ const ap=()=>{try{const j=JSON.parse(imp);if(!j.maps||!j.accounts)throw 0;setC({...DEF,...j});setImp("");say("Configuração importada.")}catch(e){say("JSON inválido.")}};
+ return html`<div class="space-y-4 fade"><div class="glass p-6 space-y-3"><h2 class="font-bold text-xl">Publicação automática (GitHub)</h2>
+  <p class="text-sm" style=${{color:M}}>Liga o painel ao repositório do site. Cada alteração é enviada sozinha e o Netlify atualiza o site em cerca de 1 minuto.</p>
+  <div class="grid gap-3 sm:grid-cols-2">${F("Utilizador GitHub",g.owner,S("owner"))}${F("Repositório",g.repo,S("repo"))}${F("Branch",g.branch,S("branch"))}${F("Ficheiro no repositório",g.path,S("path"))}</div>
+  ${F("Token de acesso (Contents: Read and write)",g.token,S("token"),{type:"password",autocomplete:"off"})}
+  <div class="flex items-center gap-3 cursor-pointer select-none" onClick=${()=>setG({...g,auto:!g.auto})}><div class=${"sw "+(g.auto?"on":"")}><i></i></div><span class="text-sm">Publicar automaticamente ao alterar</span></div>
+  <div class="flex gap-3 items-center flex-wrap"><button class="btn tap" disabled=${st.s==="run"} onClick=${pub}><${I} n="check"/> Publicar agora</button>${st.s!=="idle"&&html`<span class="text-sm" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}</div>
+  <p class="text-xs" style=${{color:M}}>O token fica só neste dispositivo e nunca vai para o config.json. Abre o painel a partir do ficheiro do zip: a página do Claude bloqueia ligações à internet.</p></div>
+  <div class="glass p-6 space-y-3"><h2 class="font-bold text-xl">Publicar manualmente (alternativa)</h2>
+  <ol class="list-decimal pl-5 text-sm space-y-1" style=${{color:M}}><li>Faz as alterações nas outras abas (ficam guardadas neste dispositivo).</li><li>Descarrega ou copia o <b>config.json</b> abaixo.</li><li>Substitui o config.json da app no alojamento (ex.: Netlify → arrasta a pasta de novo).</li><li>Quem tiver a app aberta recebe o aviso "Nova versão disponível".</li></ol>
+  <div class="flex gap-2 flex-wrap"><button class="btn tap" onClick=${dl}><${I} n="dl"/> Descarregar config.json</button><button class="ghost tap" onClick=${cp}><${I} n="copy"/> Copiar</button>${msg&&html`<span class="text-sm self-center" style=${{color:"var(--g)"}}>${msg}</span>`}</div>
+  <textarea id="out" readonly class="inp" rows="9" style=${{fontFamily:"monospace",fontSize:12}} value=${txt}></textarea></div>
+  <div class="glass p-6 space-y-3"><h3 class="font-bold">Importar config.json</h3><textarea class="inp" rows="4" placeholder="Cola aqui o conteúdo de um config.json" value=${imp} onInput=${e=>setImp(e.target.value)}></textarea>
+  <div class="flex gap-2"><button class="ghost tap" onClick=${ap}><${I} n="check"/> Aplicar</button><button class="ghost tap" style=${{color:"#f87171"}} onClick=${()=>{if(rs){setC(DEF);setRs(false)}else{setRs(true);setTimeout(()=>setRs(false),3000)}}}>${rs?"Confirmar: repor tudo":"Repor padrão"}</button></div></div></div>`;
+}
+
+function App(){
+ const [c,setC]=useState(load);const [ok,setOk]=useState(()=>{try{const s=JSON.parse(localStorage.getItem(LKEY)),a=s&&c.accounts[s.u];return !!(a&&a.admin&&hs(a.pass)===s.h)}catch(e){return false}});const [tab,setTab]=useState("maps");
+ useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}},[c]);
+ const txt=JSON.stringify(c,null,2);const [g,setG]=useState(ghLoad);const [st,setSt]=useState({s:"idle",m:""});const last=useRef(txt);
+ useEffect(()=>{try{localStorage.setItem(GK,JSON.stringify(g))}catch(e){}},[g]);
+ const pub=async()=>{
+  if(!g.owner.trim()||!g.repo.trim()||!g.token.trim()){setSt({s:"err",m:"Preenche utilizador, repositório e token."});return}
+  setSt({s:"run",m:"A publicar…"});
+  try{await ghPut(g,txt);last.current=txt;setSt({s:"ok",m:"Publicado às "+new Date().toLocaleTimeString("pt-PT",{hour:"2-digit",minute:"2-digit"})+" · o site atualiza em ~1 min"})}
+  catch(e){setSt({s:"err",m:e instanceof TypeError?"Sem ligação à internet ou bloqueada (abre o painel a partir do ficheiro).":e.message})}};
+ useEffect(()=>{if(!g.auto||!ok||txt===last.current)return;const t=setTimeout(pub,2500);return()=>clearTimeout(t)},[txt,JSON.stringify(g),ok]);
+ if(!ok)return html`<${Gate} accts=${c.accounts} onOk=${()=>setOk(true)}/>`;
+ const T=[["maps","Mapas"],["accts","Contas e Roster"],["links","Ligações e Anúncio"],["pub","Publicar"]];
+ const B={maps:Maps,accts:Accts,links:Links,pub:Publish}[tab];
+ return html`<div class="max-w-4xl mx-auto p-4 sm:p-6 space-y-4">
+  <header class="glass flex items-center gap-3 px-4 py-3" style=${{borderRadius:26}}><${Logo}/><b>FWT Admin</b>${st.s!=="idle"&&html`<span class="text-xs ml-2 hidden sm:inline" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}<button class="ghost tap ml-auto" onClick=${()=>{try{localStorage.removeItem(LKEY)}catch(e){}setOk(false)}}><${I} n="out"/> Sair</button></header>
+  <nav class="glass nav flex gap-1 p-1.5" style=${{borderRadius:22}}>${T.map(([id,l])=>html`<button key=${id} onClick=${()=>setTab(id)} class="tap px-4 py-2 rounded-2xl text-sm font-semibold whitespace-nowrap" style=${{background:tab===id?"var(--g)":"transparent",color:tab===id?"#0d1a04":"var(--tx)"}}>${l}</button>`)}</nav>
+  <${B} c=${c} setC=${setC} gh=${{g,setG,st,pub}}/></div>`;
+}
+ReactDOM.createRoot(document.getElementById("root")).render(html`<${App}/>`);
+</script></body></html>
