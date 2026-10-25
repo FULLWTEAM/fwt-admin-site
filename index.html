@@ -9,7 +9,7 @@
 <style>
 :root{--g:#73E639;--tx:#F4F6F2;--mut:#9aa097;box-sizing:border-box;color-scheme:dark;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
 body{margin:0;color:var(--tx);font-family:-apple-system,"SF Pro Display",Inter,system-ui,sans-serif;min-height:100vh;background:radial-gradient(60% 50% at 15% 10%,rgba(115,230,57,.25),transparent 70%),linear-gradient(160deg,#262626,#151515) fixed;overflow-x:hidden}
-.glass{position:relative;background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.03));backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,.14);border-radius:28px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.4),0 20px 50px -20px rgba(0,0,0,.7)}
+.glass{position:relative;background:linear-gradient(135deg,rgba(255,255,255,.12),rgba(255,255,255,.03));-webkit-backdrop-filter:blur(28px) saturate(180%);backdrop-filter:blur(28px) saturate(180%);border:1px solid rgba(255,255,255,.14);border-radius:28px;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.4),0 20px 50px -20px rgba(0,0,0,.7)}
 .tap{transition:transform .2s cubic-bezier(.34,1.56,.64,1)}.tap:active{transform:scale(.94)}
 .btn{background:var(--g);color:#0d1a04;font-weight:700;border-radius:18px;padding:.65rem 1.1rem;box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6),0 8px 24px -8px rgba(115,230,57,.7);display:inline-flex;align-items:center;gap:.5rem;justify-content:center}
 .ghost{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:var(--tx);border-radius:16px;padding:.5rem .85rem;display:inline-flex;align-items:center;gap:.4rem;font-size:.85rem}
@@ -20,16 +20,21 @@ body{margin:0;color:var(--tx);font-family:-apple-system,"SF Pro Display",Inter,s
 .sw.on{background:var(--g)}.sw.on i{transform:translateX(20px)}
 .fade{animation:f .45s cubic-bezier(.22,1,.36,1) both}@keyframes f{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .nav{overflow-x:auto;scrollbar-width:none}
+html{-webkit-text-size-adjust:100%}*{-webkit-tap-highlight-color:transparent}button,a{touch-action:manipulation}
+body{min-height:100dvh}.glass{overflow-wrap:anywhere}
+@media (hover:none){.lift:hover{transform:none}}
+@media (max-width:640px){.glass{border-radius:24px}.btn{padding:.75rem 1rem}.ghost{padding:.6rem .8rem}.inp{padding:.8rem .95rem}}
+@media (pointer:coarse){.ghost,.btn{min-height:44px}}
 </style></head><body><div id="root"></div>
 <script>
 const {useState,useEffect,useRef}=React;const html=htm.bind(React.createElement);
-const DEF={"maps": [{"id": 1, "nome": "Mirage", "tipo": "Granadas", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Smokes, molotovs e flashes para execuções A e B. Lineups marcados no chão.", "on": true}, {"id": 2, "nome": "Aim_Botz", "tipo": "Aim/Mira", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Bots configuráveis para treino de spray control e flicks a diferentes distâncias.", "on": true}, {"id": 3, "nome": "Inferno", "tipo": "Retake", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Cenários de retake 3v4 nos bombsites A e B com utilitário limitado.", "on": true}, {"id": 4, "nome": "Dust2", "tipo": "Posicionamento", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Ângulos, off-angles e posições de hold para CT e T.", "on": false}], "accounts": {"konkelfwt": {"pass": "konkelFWT2026", "admin": true, "disp": "Konkel", "steam": "https://steamcommunity.com/id/konkelfwt/", "email": "", "phone": ""}, "fergod99fwt": {"pass": "fergod991", "disp": "FerGod", "steam": "https://steamcommunity.com/profiles/76561199682614793", "email": "", "phone": ""}, "leodobigodefwt": {"pass": "bigode123", "disp": "Leo do Bigode", "steam": "https://steamcommunity.com", "email": "", "phone": ""}, "oliveirexfwt": {"pass": "oliveirafwt", "disp": "Oliveirex", "steam": "https://steamcommunity.com", "email": "", "phone": ""}, "oleofwt": {"pass": "manuoleofwt", "disp": "Oleo", "steam": "https://steamcommunity.com/profiles/76561199871391790", "email": "", "phone": ""}, "pixkitofwt": {"pass": "pixkofwt", "disp": "Pixkito", "steam": "https://steamcommunity.com/id/pixkito", "email": "", "phone": ""}}, "roster": ["konkelfwt", "fergod99fwt", "leodobigodefwt", "oleofwt", "pixkitofwt"], "links": {"discord": "https://discord.gg/NgYBeKcKzn", "steam": "https://steamcommunity.com/groups/fullwteam", "gname": "FULL W TEAM | FWT"}, "news": ""};const KEY="fwt-admin-cfg";const M="var(--mut)";
+const DEF={"maps": [{"id": 1, "nome": "Mirage", "tipo": "Granadas", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Smokes, molotovs e flashes para execuções A e B. Lineups marcados no chão.", "on": true}, {"id": 2, "nome": "Aim_Botz", "tipo": "Aim/Mira", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Bots configuráveis para treino de spray control e flicks a diferentes distâncias.", "on": true}, {"id": 3, "nome": "Inferno", "tipo": "Retake", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Cenários de retake 3v4 nos bombsites A e B com utilitário limitado.", "on": true}, {"id": 4, "nome": "Dust2", "tipo": "Posicionamento", "link": "https://steamcommunity.com/workshop/browse/?appid=730", "desc": "Ângulos, off-angles e posições de hold para CT e T.", "on": false}], "accounts": {"konkelfwt": {"pass": "konkelFWT2026", "admin": true, "disp": "Konkel", "steam": "https://steamcommunity.com/id/konkelfwt/", "email": "", "phone": ""}, "fergod99fwt": {"pass": "fergod991", "disp": "FerGod", "steam": "https://steamcommunity.com/profiles/76561199682614793", "email": "", "phone": ""}, "leodobigodefwt": {"pass": "bigode123", "disp": "Leo do Bigode", "steam": "https://steamcommunity.com", "email": "", "phone": ""}, "oliveirexfwt": {"pass": "oliveirafwt", "disp": "Oliveirex", "steam": "https://steamcommunity.com", "email": "", "phone": ""}, "oleofwt": {"pass": "manuoleofwt", "disp": "Oleo", "steam": "https://steamcommunity.com/profiles/76561199871391790", "email": "", "phone": ""}, "pixkitofwt": {"pass": "pixkofwt", "disp": "Pixkito", "steam": "https://steamcommunity.com/id/pixkito", "email": "", "phone": ""}}, "roster": ["konkelfwt", "fergod99fwt", "leodobigodefwt", "oleofwt", "pixkitofwt"], "links": {"discord": "https://discord.gg/NgYBeKcKzn", "steam": "https://steamcommunity.com/groups/fullwteam", "gname": "FULL W TEAM | FWT"}, "news": "", "site": {"name": "FULL W TEAM", "sub": "Escolhe uma rotina e treina com a equipa.", "login": "Inicia sessão para continuar", "footer": ""}, "menu": [{"id": "hub", "label": "Hub de Treino", "icon": "map", "on": true, "kind": "builtin"}, {"id": "opt", "label": "Otimização CS2", "icon": "zap", "on": true, "kind": "builtin"}, {"id": "roster", "label": "Roster", "icon": "users", "on": true, "kind": "builtin"}, {"id": "discord", "label": "Discord", "icon": "msg", "on": true, "kind": "builtin"}, {"id": "steam", "label": "Steam Group", "icon": "shield", "on": true, "kind": "builtin"}]};const KEY="fwt-admin-cfg";const M="var(--mut)";
 const TYPES=["Granadas","Aim/Mira","Retake","Posicionamento"];
 const P={plus:"M12 5v14M5 12h14",trash:"M3 6h18M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2",copy:"M9 9h11v11H9zM5 15H4V4h11v1",dl:"M12 3v12M7 10l5 5 5-5M4 21h16",out:"M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9",lock:"M5 11h14v10H5zM8 11V7a4 4 0 0 1 8 0v4",check:"M20 6L9 17l-5-5"};
 const I=({n,s=16})=>html`<svg width=${s} height=${s} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d=${P[n]}/></svg>`;
 const Logo=({s=34})=>html`<svg width=${s} height=${s*.847} viewBox="148 164 203 172" fill="#73E639"><polygon points="148,164 197,188 197,262 246,213 246,288 197,336 148,312"/><polygon points="351,164 302,188 302,262 253,213 253,288 302,336 351,312"/></svg>`;
 const F=(l,v,f,o={})=>html`<label class="block"><span class="text-xs font-semibold px-1" style=${{color:M}}>${l}</span><input class="inp mt-1" value=${v||""} onInput=${e=>f(e.target.value)} ...${o}/></label>`;
-const load=()=>{try{return JSON.parse(localStorage.getItem(KEY))||DEF}catch(e){return DEF}};
+const load=()=>{try{return {...DEF,...(JSON.parse(localStorage.getItem(KEY))||{})}}catch(e){return DEF}};
 
 const LKEY="fwt-admin-login";
 const hs=s=>{let x=5381;for(let i=0;i<s.length;i++)x=((x<<5)+x+s.charCodeAt(i))|0;return x};
@@ -81,8 +86,14 @@ function Maps({c,setC}){
    <button class="ghost tap" style=${{color:"#f87171"}} onClick=${()=>setC({...c,maps:c.maps.filter((_,j)=>j!==i)})}><${I} n="trash"/> Remover</button></div></div>`)}</div>`;
 }
 
+function Uname({k,ren}){
+ const [v,setV]=useState(k);const [e,setE]=useState("");useEffect(()=>setV(k),[k]);
+ const ok=()=>{const r=ren(k,v);if(r){setE(r);setV(k)}else setE("")};
+ return html`<div>${F("Nome de utilizador (login)",v,x=>{setV(x);setE("")},{onBlur:ok,onKeyDown:ev=>ev.key==="Enter"&&ev.target.blur(),autocapitalize:"none"})}${e&&html`<p class="text-xs text-red-400 px-1 mt-1">${e}</p>`}</div>`}
 function Accts({c,setC}){
- const [nu,setNu]=useState("");
+ const [nu,setNu]=useState("");const nAdm=Object.values(c.accounts).filter(x=>x.admin).length;
+ const ren=(o,v)=>{const n=v.trim().toLowerCase().replace(/\s+/g,"");if(!n)return"O nome não pode ficar vazio.";if(n===o)return null;if(c.accounts[n])return"Esse utilizador já existe.";
+  setC({...c,accounts:Object.fromEntries(Object.entries(c.accounts).map(([k,a])=>[k===o?n:k,a])),roster:c.roster.map(k=>k===o?n:k)});return null};
  const up=(k,p)=>setC({...c,accounts:{...c.accounts,[k]:{...c.accounts[k],...p}}});
  const rost=k=>setC({...c,roster:c.roster.includes(k)?c.roster.filter(x=>x!==k):[...c.roster,k]});
  const del=k=>{const a={...c.accounts};delete a[k];setC({...c,accounts:a,roster:c.roster.filter(x=>x!==k)})};
@@ -90,11 +101,34 @@ function Accts({c,setC}){
  return html`<div class="space-y-4 fade"><h2 class="font-bold text-xl">Contas e Roster</h2>
   <div class="flex gap-2"><input class="inp" placeholder="novo utilizador (ex: joaofwt)" value=${nu} onInput=${e=>setNu(e.target.value)}/><button class="btn tap" onClick=${add}><${I} n="plus"/> Criar</button></div>
   ${Object.keys(c.accounts).map(k=>{const a=c.accounts[k];return html`<div key=${k} class="glass p-5 space-y-3" style=${{borderRadius:24}}>
-   <div class="flex items-center justify-between"><b style=${{color:"var(--g)"}}>@${k}</b>${k!=="konkelfwt"&&html`<button class="ghost tap" style=${{color:"#f87171"}} onClick=${()=>del(k)}><${I} n="trash"/> Remover</button>`}</div>
-   <div class="grid gap-3 sm:grid-cols-3">${F("Nome de exibição",a.disp,v=>up(k,{disp:v}))}${F("Password",a.pass,v=>up(k,{pass:v}))}${F("Link Steam",a.steam,v=>up(k,{steam:v}))}</div>
-   <div class="flex gap-5 text-sm flex-wrap"><label class="flex items-center gap-2"><input type="checkbox" checked=${!!a.admin} disabled=${k==="konkelfwt"} onChange=${e=>up(k,{admin:e.target.checked})}/> Admin</label><label class="flex items-center gap-2"><input type="checkbox" checked=${c.roster.includes(k)} onChange=${()=>rost(k)}/> Aparece no Roster</label></div></div>`})}</div>`;
+   <div class="flex items-center justify-between"><b style=${{color:"var(--g)"}}>@${k}</b>${!(a.admin&&nAdm===1)&&html`<button class="ghost tap" style=${{color:"#f87171"}} onClick=${()=>del(k)}><${I} n="trash"/> Remover</button>`}</div>
+   <div class="grid gap-3 sm:grid-cols-2"><${Uname} k=${k} ren=${ren}/>${F("Nome de exibição",a.disp,v=>up(k,{disp:v}))}${F("Password",a.pass,v=>up(k,{pass:v}))}${F("Link Steam",a.steam,v=>up(k,{steam:v}))}</div>
+   <div class="flex gap-5 text-sm flex-wrap"><label class="flex items-center gap-2"><input type="checkbox" checked=${!!a.admin} disabled=${!!a.admin&&nAdm===1} onChange=${e=>up(k,{admin:e.target.checked})}/> Admin</label><label class="flex items-center gap-2"><input type="checkbox" checked=${c.roster.includes(k)} onChange=${()=>rost(k)}/> Aparece no Roster</label></div></div>`})}</div>`;
 }
 
+const ICONS=[["shield","Escudo"],["link","Ligação"],["msg","Mensagem"],["users","Equipa"],["zap","Raio"],["map","Mapa"],["user","Pessoa"],["ext","Externo"]];
+function MenuTab({c,setC}){
+ const m=c.menu,site=c.site,on=m.filter(x=>x.on).length;
+ const setM=a=>setC({...c,menu:a});const up=(i,p)=>setM(m.map((x,j)=>j===i?{...x,...p}:x));
+ const mv=(i,d)=>{const j=i+d;if(j<0||j>=m.length)return;const a=[...m];[a[i],a[j]]=[a[j],a[i]];setM(a)};
+ const S=k=>v=>setC({...c,site:{...site,[k]:v}});
+ const T=(x)=>x.kind==="builtin"?"Padrão":x.kind==="page"?"Página":"Link";
+ return html`<div class="space-y-4 fade"><div class="glass p-6 space-y-3"><h2 class="font-bold text-xl">Site</h2>
+  ${F("Nome da equipa / site",site.name,S("name"))}${F("Subtítulo do Hub",site.sub,S("sub"))}${F("Texto do login",site.login,S("login"))}${F("Rodapé (vazio = escondido)",site.footer,S("footer"))}</div>
+  <div class="flex items-center justify-between gap-2 flex-wrap"><h2 class="font-bold text-xl">Menu do site (${m.length})</h2><div class="flex gap-2">
+   <button class="btn tap" onClick=${()=>setM([...m,{id:"c"+Date.now(),kind:"page",label:"Nova página",icon:"shield",on:true,title:"",text:"",btnLabel:"",btnUrl:""}])}><${I} n="plus"/> Página</button>
+   <button class="ghost tap" onClick=${()=>setM([...m,{id:"c"+Date.now(),kind:"link",label:"Novo link",icon:"link",on:true,url:"https://"}])}><${I} n="plus"/> Link</button></div></div>
+  ${m.map((x,i)=>html`<div key=${x.id} class="glass p-5 space-y-3" style=${{borderRadius:24}}>
+   <div class="flex items-center gap-2 flex-wrap"><span class="text-xs font-bold px-2 py-1 rounded-full" style=${{background:"rgba(255,255,255,.1)",color:x.kind==="builtin"?M:"var(--g)"}}>${T(x)}</span><div class="flex-1"></div>
+    <button class="ghost tap" aria-label="Subir" disabled=${i===0} onClick=${()=>mv(i,-1)}>▲</button><button class="ghost tap" aria-label="Descer" disabled=${i===m.length-1} onClick=${()=>mv(i,1)}>▼</button>
+    <button class=${"sw tap "+(x.on?"on":"")} aria-label="Visível" onClick=${()=>{if(x.on&&on<=1)return;up(i,{on:!x.on})}}><i></i></button>
+    ${x.kind!=="builtin"&&html`<button class="ghost tap" style=${{color:"#f87171"}} aria-label="Remover" onClick=${()=>setM(m.filter((_,j)=>j!==i))}><${I} n="trash"/></button>`}</div>
+   <div class="grid gap-3 sm:grid-cols-2">${F("Nome no menu",x.label,v=>up(i,{label:v}))}
+    ${x.kind!=="builtin"&&html`<label class="block"><span class="text-xs font-semibold px-1" style=${{color:M}}>Ícone</span><select class="inp mt-1" value=${x.icon} onChange=${e=>up(i,{icon:e.target.value})}>${ICONS.map(([v,l])=>html`<option key=${v} value=${v} style=${{background:"#1E1E1E"}}>${l}</option>`)}</select></label>`}</div>
+   ${x.kind==="link"&&F("Endereço (abre noutro separador)",x.url,v=>up(i,{url:v}))}
+   ${x.kind==="page"&&html`<div class="space-y-3">${F("Título da página",x.title,v=>up(i,{title:v}))}<textarea class="inp" rows="4" placeholder="Texto da página" value=${x.text} onInput=${e=>up(i,{text:e.target.value})}></textarea>
+    <div class="grid gap-3 sm:grid-cols-2">${F("Texto do botão (opcional)",x.btnLabel,v=>up(i,{btnLabel:v}))}${F("Link do botão (opcional)",x.btnUrl,v=>up(i,{btnUrl:v}))}</div></div>`}</div>`)}</div>`;
+}
 function Links({c,setC}){
  const L=(p)=>setC({...c,links:{...c.links,...p}});
  return html`<div class="glass p-6 space-y-4 fade"><h2 class="font-bold text-xl">Ligações e Anúncio</h2>
@@ -140,10 +174,10 @@ function App(){
   catch(e){setSt({s:"err",m:e instanceof TypeError?"Sem ligação à internet ou bloqueada (abre o painel a partir do ficheiro).":e.message})}};
  useEffect(()=>{if(!g.auto||!ok||!g.owner||!g.repo||!g.token||txt===last.current)return;const t=setTimeout(pub,2500);return()=>clearTimeout(t)},[txt,JSON.stringify(g),ok]);
  if(!ok)return html`<${Gate} accts=${c.accounts} onOk=${()=>setOk(true)}/>`;
- const T=[["maps","Mapas"],["accts","Contas e Roster"],["links","Ligações e Anúncio"],["pub","Publicar"]];
- const B={maps:Maps,accts:Accts,links:Links,pub:Publish}[tab];
+ const T=[["maps","Mapas"],["accts","Contas e Roster"],["menu","Menu e Site"],["links","Ligações e Anúncio"],["pub","Publicar"]];
+ const B={maps:Maps,accts:Accts,menu:MenuTab,links:Links,pub:Publish}[tab];
  return html`<div class="max-w-4xl mx-auto p-4 sm:p-6 space-y-4">
-  <header class="glass flex items-center gap-3 px-4 py-3" style=${{borderRadius:26}}><${Logo}/><b>FWT Admin</b>${st.s!=="idle"&&html`<span class="text-xs ml-2 hidden sm:inline" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}${st.s==="idle"&&!(g.owner&&g.token)&&html`<button class="text-xs ml-2 hidden sm:inline" style=${{color:"#F5A524"}} onClick=${()=>setTab("pub")}>Não ligado ao GitHub</button>`}<button class="ghost tap ml-auto" onClick=${()=>{try{localStorage.removeItem(LKEY)}catch(e){}setOk(false)}}><${I} n="out"/> Sair</button></header>
+  <header class="glass flex flex-wrap items-center gap-3 px-4 py-3" style=${{borderRadius:26}}><${Logo}/><b>FWT Admin</b>${st.s!=="idle"&&html`<span class="text-xs order-last w-full sm:order-none sm:w-auto sm:ml-2" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}${st.s==="idle"&&!(g.owner&&g.token)&&html`<button class="text-xs order-last w-full sm:order-none sm:w-auto sm:ml-2" style=${{color:"#F5A524"}} onClick=${()=>setTab("pub")}>Não ligado ao GitHub</button>`}<button class="ghost tap ml-auto" onClick=${()=>{try{localStorage.removeItem(LKEY)}catch(e){}setOk(false)}}><${I} n="out"/> Sair</button></header>
   <nav class="glass nav flex gap-1 p-1.5" style=${{borderRadius:22}}>${T.map(([id,l])=>html`<button key=${id} onClick=${()=>setTab(id)} class="tap px-4 py-2 rounded-2xl text-sm font-semibold whitespace-nowrap" style=${{background:tab===id?"var(--g)":"transparent",color:tab===id?"#0d1a04":"var(--tx)"}}>${l}</button>`)}</nav>
   <${B} c=${c} setC=${setC} gh=${{g,setG,st,pub,pull}}/></div>`;
 }

@@ -1,5 +1,5 @@
 FWT ADMIN - PAINEL DE GESTAO
-1. Abre o index.html no navegador (duplo clique). Nao o alojes junto do site publico.
-2. Entra com uma conta admin (podes ligar "Memorizar login e palavra-passe").
-3. Separador Publicar > Publicacao automatica (GitHub): preenche utilizador, repositorio, branch, ficheiro (config.json) e token (fine-grained, so esse repositorio, Contents: Read and write).
-4. Liga "Publicar automaticamente ao alterar". Cada mudanca e enviada ao repositorio e o Netlify atualiza o site em ~1 minuto.
+1. Abre o index.html no navegador (duplo clique ou no telemovel a partir dos ficheiros). Nao o alojes junto do site publico.
+2. Separador Publicar: cola o link do repositorio GitHub e o token. A atualizacao automatica vem ligada.
+3. Separadores: Mapas, Contas e Roster (podes mudar nomes de utilizador), Menu e Site (paginas e links no menu, ordem, textos), Ligacoes e Anuncio, Publicar.
+4. Carrega primeiro a config do site (botao em Publicar) antes de editar.
