@@ -66,13 +66,18 @@ async function ghPut(g,txt){
 const dbn=s=>{let u=(s||"").trim().replace(/\.json.*$/,"").replace(/\/(chat|profiles)(\/.*)?$/,"").replace(/\/+$/,"");if(u&&!/^https?:\/\//i.test(u))u="https://"+u;return u};
 const dbOk=u=>/^https:\/\/[a-z0-9.-]+\.(firebaseio\.com|firebasedatabase\.app)$/i.test(u);
 const sha=async s=>[...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+const pwH=(u,p)=>sha("fwt-pw:"+p);
+function PwSet({k,a,onSet}){const [v,setV]=useState("");
+ return html`<div class="flex gap-2 items-end flex-wrap"><div class="flex-1" style=${{minWidth:200}}>${F("Password ("+(a.ph?"✔ protegida":a.pass?"em texto simples":"não definida")+")",v,setV,{type:"password",placeholder:"escreve para definir uma nova",autocomplete:"new-password"})}</div><button class="ghost tap" onClick=${async()=>{if(v.length<6)return;onSet(await pwH(k,v));setV("")}}>Definir password</button></div>`}
 function EmailSet({a,onSet}){const [v,setV]=useState("");
  return html`<div class="flex gap-2 items-end flex-wrap"><div class="flex-1" style=${{minWidth:200}}>${F("E-mail de recuperação ("+(a.eh?"✔ definido":"não definido")+")",v,setV,{type:"email",placeholder:"escreve para definir ou substituir"})}</div><button class="ghost tap" onClick=${async()=>{if(!v.trim())return;onSet(await sha("fwt-mail:"+v.trim().toLowerCase()));setV("")}}>Guardar e-mail</button>${a.eh&&html`<button class="ghost tap" onClick=${()=>onSet("")}>Limpar</button>`}</div>`}
 const AvA=({a,s=40})=>a&&a.avatar?html`<img src=${a.avatar} alt="" style=${{width:s,height:s,borderRadius:"30%",objectFit:"cover",flex:"none"}}/>`:html`<div style=${{width:s,height:s,borderRadius:"30%",flex:"none",background:"linear-gradient(135deg,#73E639,#1f6d0f)",color:"#0d1a04",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:800}}>${((a&&a.disp)||"?").charAt(0).toUpperCase()}</div>`;
 const pickImg=(f,cb)=>{if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const s=Math.min(im.width,im.height),c=document.createElement("canvas");c.width=c.height=128;c.getContext("2d").drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,128,128);cb(c.toDataURL("image/jpeg",.78))};im.src=r.result};r.readAsDataURL(f)};
 function Gate({accts,onOk}){
  const [u,setU]=useState("");const [p,setP]=useState("");const [e,setE]=useState(false);const [rm,setRm]=useState(false);
- const go=()=>{const k=u.trim().toLowerCase(),a=accts[k];if(a&&a.admin&&a.pass===p){try{rm?localStorage.setItem(LKEY,JSON.stringify({u:k,h:hs(p)})):localStorage.removeItem(LKEY)}catch(x){}onOk(k)}else setE(true)};
+ const go=async()=>{const k=u.trim().toLowerCase(),a=accts[k];
+  const ok=!!(a&&a.admin&&(a.ph?(await pwH(k,p))===a.ph:a.pass===p));
+  if(ok){try{rm?localStorage.setItem(LKEY,JSON.stringify({u:k,h:hs(p),o:a.ph?1:0})):localStorage.removeItem(LKEY)}catch(x){}onOk(k)}else setE(true)};
  return html`<div class="min-h-screen flex items-center justify-center p-5"><div class="glass fade w-full max-w-sm p-8 space-y-3">
   <div class="flex flex-col items-center mb-3"><${Logo} s=${52}/><h1 class="text-2xl font-extrabold mt-3">FWT Admin</h1><p class="text-sm" style=${{color:M}}>Consola de gestão</p></div>
   <input class="inp" placeholder="Utilizador admin" autocapitalize="none" value=${u} onInput=${x=>{setU(x.target.value);setE(false)}}/>
@@ -100,6 +105,7 @@ function Uname({k,ren}){
  const ok=()=>{const r=ren(k,v);if(r){setE(r);setV(k)}else setE("")};
  return html`<div>${F("Nome de utilizador (login)",v,x=>{setV(x);setE("")},{onBlur:ok,onKeyDown:ev=>ev.key==="Enter"&&ev.target.blur(),autocapitalize:"none"})}${e&&html`<p class="text-xs text-red-400 px-1 mt-1">${e}</p>`}</div>`}
 function Accts({c,setC}){
+ const protect=async()=>{const acc={...c.accounts};for(const k of Object.keys(acc)){const a=acc[k];if(a.pass&&!a.ph)acc[k]={...a,ph:await pwH(k,a.pass),pass:""}}setC({...c,accounts:acc})};
  const [nu,setNu]=useState("");const nAdm=Object.values(c.accounts).filter(x=>x.admin).length;
  const ren=(o,v)=>{const n=v.trim().toLowerCase().replace(/\s+/g,"");if(!n)return"O nome não pode ficar vazio.";if(n===o)return null;if(c.accounts[n])return"Esse utilizador já existe.";
   setC({...c,accounts:Object.fromEntries(Object.entries(c.accounts).map(([k,a])=>[k===o?n:k,a])),roster:c.roster.map(k=>k===o?n:k)});return null};
@@ -107,12 +113,12 @@ function Accts({c,setC}){
  const rost=k=>setC({...c,roster:c.roster.includes(k)?c.roster.filter(x=>x!==k):[...c.roster,k]});
  const del=k=>{const a={...c.accounts};delete a[k];setC({...c,accounts:a,roster:c.roster.filter(x=>x!==k)})};
  const add=()=>{const k=nu.trim().toLowerCase().replace(/\s+/g,"");if(!k||c.accounts[k])return;setC({...c,accounts:{...c.accounts,[k]:{pass:"mudar123",disp:nu.trim(),steam:"https://steamcommunity.com",email:"",phone:""}}});setNu("")};
- return html`<div class="space-y-4 fade"><h2 class="font-bold text-xl">Contas e Roster</h2>
+ return html`<div class="space-y-4 fade"><div class="flex items-center justify-between gap-2 flex-wrap"><h2 class="font-bold text-xl">Contas e Roster</h2><button class="ghost tap" onClick=${protect}><${I} n="lock"/> Proteger passwords</button></div>
   <div class="flex gap-2"><input class="inp" placeholder="novo utilizador (ex: joaofwt)" value=${nu} onInput=${e=>setNu(e.target.value)}/><button class="btn tap" onClick=${add}><${I} n="plus"/> Criar</button></div>
   ${Object.keys(c.accounts).map(k=>{const a=c.accounts[k];return html`<div key=${k} class="glass p-5 space-y-3" style=${{borderRadius:24}}>
    <div class="flex items-center justify-between"><b style=${{color:"var(--g)"}}>@${k}</b>${!(a.admin&&nAdm===1)&&html`<button class="ghost tap" style=${{color:"#f87171"}} onClick=${()=>del(k)}><${I} n="trash"/> Remover</button>`}</div>
    <div class="flex items-center gap-4"><${AvA} a=${a} s=${64}/><div class="flex gap-2 flex-wrap"><label class="ghost tap cursor-pointer">Mudar imagem<input type="file" accept="image/*" class="hidden" onChange=${e=>pickImg(e.target.files[0],x=>upp(k,{avatar:x}))}/></label>${a.avatar&&html`<button class="ghost tap" onClick=${()=>upp(k,{avatar:""})}>Remover imagem</button>`}</div></div>
-   <div class="grid gap-3 sm:grid-cols-2"><${Uname} k=${k} ren=${ren}/>${F("Nome de exibição",a.disp,v=>upp(k,{disp:v}))}${F("Password",a.pass,v=>up(k,{pass:v,pwts:Date.now()}))}${F("Link Steam",a.steam,v=>up(k,{steam:v}))}${F("Nick da FACEIT",a.faceit,v=>upp(k,{faceit:v}))}</div>
+   <div class="grid gap-3 sm:grid-cols-2"><${Uname} k=${k} ren=${ren}/>${F("Nome de exibição",a.disp,v=>upp(k,{disp:v}))}<${PwSet} k=${k} a=${a} onSet=${h=>up(k,{ph:h,pass:"",pwts:Date.now()})}/>${F("Link Steam",a.steam,v=>up(k,{steam:v}))}${F("Nick da FACEIT",a.faceit,v=>upp(k,{faceit:v}))}</div>
    <textarea class="inp" rows="2" maxlength="160" placeholder="Bio (máx. 160 caracteres)" value=${a.bio||""} onInput=${e=>upp(k,{bio:e.target.value})}></textarea>
    <${EmailSet} a=${a} onSet=${eh=>upp(k,{eh})}/>
    <div class="flex gap-5 text-sm flex-wrap"><label class="flex items-center gap-2"><input type="checkbox" checked=${!!a.admin} disabled=${!!a.admin&&nAdm===1} onChange=${e=>up(k,{admin:e.target.checked})}/> Admin</label><label class="flex items-center gap-2"><input type="checkbox" checked=${c.roster.includes(k)} onChange=${()=>rost(k)}/> Aparece no Roster</label></div></div>`})}</div>`;
@@ -151,7 +157,8 @@ function ServersTab({c,setC}){
    <div class="flex items-center justify-between"><div class="flex items-center gap-3"><button class=${"sw tap "+(s.on!==false?"on":"")} aria-label="Visível" onClick=${()=>up(i,{on:s.on===false})}><i></i></button><span class="text-sm" style=${{color:M}}>${s.on!==false?"Visível no site":"Oculto"}</span></div>
    <button class="ghost tap" style=${{color:"#f87171"}} onClick=${()=>set(L.filter((_,j)=>j!==i))}><${I} n="trash"/> Remover</button></div></div>`)}</div>`;
 }
-function Links({c,setC}){const [tst,setTst]=useState("");
+function Links({c,setC}){const [tst,setTst]=useState("");const [tm,setTm]=useState("");const [tr,setTr]=useState("");
+ const sendTest=async()=>{if(!tm.trim())return;setTr("A enviar…");try{const r=await fetch("https://api.emailjs.com/api/v1.0/email/send",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({service_id:c.links.ejsService,template_id:c.links.ejsTemplate,user_id:c.links.ejsKey,template_params:{to_email:tm.trim(),code:"123456",username:"teste",site:c.site.name}})});setTr(r.ok?"✔ E-mail de teste enviado para "+tm.trim():"Recusado: "+String(await r.text()).slice(0,160))}catch(e){setTr("Sem ligação ao EmailJS.")}};
  const test=async()=>{const u=dbn(c.links.db);if(!u){setTst("Cola primeiro o URL.");return}if(!dbOk(u)){setTst("Esse não parece o URL da base de dados (tem de terminar em firebasedatabase.app ou firebaseio.com). O link da consola não serve.");return}
   setTst("A testar…");try{const r=await fetch(u+"/chat.json?orderBy=%22%24key%22&limitToLast=1",{cache:"no-store"});setTst(r.ok?"✔ Ligação OK. O chat deve funcionar.":r.status===401||r.status===403?"A base de dados existe, mas as regras bloqueiam a leitura. Publica as regras no Firebase.":r.status===404?"Base de dados não encontrada (404). Confirma o URL.":"Erro "+r.status+".")}catch(e){setTst("Não consegui contactar esse endereço. Confirma o URL.")}};
  const L=(p)=>setC({...c,links:{...c.links,...p}});
@@ -165,13 +172,15 @@ function Links({c,setC}){const [tst,setTst]=useState("");
   ${F("Chave da API FACEIT (Data API)",c.links.fkey,v=>L({fkey:v}))}
   <div class="pt-2 font-bold">Recuperação de password por e-mail (EmailJS)</div>
   <div class="grid gap-3 sm:grid-cols-2">${F("EmailJS · Service ID",c.links.ejsService,v=>L({ejsService:v}))}${F("EmailJS · Template ID",c.links.ejsTemplate,v=>L({ejsTemplate:v}))}</div>${F("EmailJS · Public Key",c.links.ejsKey,v=>L({ejsKey:v}))}
+  <div class="flex gap-2 items-end flex-wrap"><div class="flex-1" style=${{minWidth:200}}>${F("Enviar e-mail de teste para",tm,setTm,{type:"email",placeholder:"o-teu@email.com"})}</div><button class="ghost tap" onClick=${sendTest}>Enviar teste</button></div>
+  ${tr&&html`<p class="text-sm" style=${{color:tr.startsWith("✔")?"var(--g)":"#f87171"}}>${tr}</p>`}
   <p class="text-xs" style=${{color:M}}>No template do EmailJS, põe "To Email" = {{to_email}} e usa {{code}}, {{username}} e {{site}} no texto.</p>
   <p class="text-xs" style=${{color:M}}>Estes valores vão para o config.json e ficam visíveis a quem abrir o site.</p>
   <label class="block"><span class="text-xs font-semibold px-1" style=${{color:M}}>Anúncio no Hub (vazio = escondido)</span><textarea class="inp mt-1" rows="3" value=${c.news} onInput=${e=>setC({...c,news:e.target.value})}></textarea></label></div>`;
 }
 
 function Publish({c,setC,gh}){
- const {g,setG,st,pub,pull,sync}=gh;const lk=g.link||(g.owner&&g.repo?"https://github.com/"+g.owner+"/"+g.repo:"");const ready=!!(g.owner&&g.repo&&g.token);const S=k=>v=>setG({...g,[k]:v});
+ const {g,setG,st,pub,pull,sync,evs}=gh;const lk=g.link||(g.owner&&g.repo?"https://github.com/"+g.owner+"/"+g.repo:"");const ready=!!(g.owner&&g.repo&&g.token);const S=k=>v=>setG({...g,[k]:v});
  const txt=JSON.stringify(c,null,2);const [imp,setImp]=useState("");const [msg,setMsg]=useState("");const [rs,setRs]=useState(false);
  const say=m=>{setMsg(m);setTimeout(()=>setMsg(""),2500)};
  const cp=async()=>{try{await navigator.clipboard.writeText(txt)}catch(e){const o=document.getElementById("out");o.select();document.execCommand("copy")}say("Copiado!")};
@@ -183,6 +192,7 @@ function Publish({c,setC,gh}){
   ${F("Token do GitHub (Contents: Read and write)",g.token,S("token"),{type:"password",autocomplete:"off"})}
   <div class="flex items-center gap-3 cursor-pointer select-none" onClick=${()=>setG({...g,auto:!g.auto})}><div class=${"sw "+(g.auto?"on":"")}><i></i></div><span class="text-sm">Atualizar o site automaticamente</span></div>
   <div class="flex gap-2 items-center flex-wrap"><button class="btn tap" disabled=${st.s==="run"} onClick=${pub}><${I} n="check"/> Publicar agora</button><button class="ghost tap" disabled=${!ready||st.s==="run"} onClick=${pull}><${I} n="dl"/> Carregar config do site</button><button class="ghost tap" disabled=${!ready||st.s==="run"} onClick=${sync}><${I} n="check"/> Sincronizar com o site</button>${st.s!=="idle"&&html`<span class="text-sm" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}</div>
+  ${evs.length>0&&html`<div class="text-xs space-y-1" style=${{color:M}}><b style=${{color:"var(--tx)"}}>Alterações recentes no site</b>${evs.map((x,i)=>html`<div key=${i}>${x.u} · ${x.t}${x.d?" · "+x.d:""} · ${x.ts?new Date(x.ts).toLocaleString("pt-PT"):""}</div>`)}</div>`}
   <details class="text-sm" style=${{color:M}}><summary class="cursor-pointer">Avançado</summary><div class="grid gap-3 sm:grid-cols-2 mt-3">${F("Branch",g.branch,S("branch"))}${F("Ficheiro no repositório",g.path,S("path"))}</div></details>
   <p class="text-xs" style=${{color:M}}>O token fica só neste dispositivo e nunca vai para o config.json. Abre o painel a partir do ficheiro do zip: a página do Claude bloqueia ligações à internet.</p></div>
   <div class="glass p-6 space-y-3"><h2 class="font-bold text-xl">Publicar manualmente (alternativa)</h2>
@@ -194,7 +204,7 @@ function Publish({c,setC,gh}){
 }
 
 function App(){
- const [c,setC]=useState(load);const [ok,setOk]=useState(()=>{try{const s=JSON.parse(localStorage.getItem(LKEY)),a=s&&c.accounts[s.u];return !!(a&&a.admin&&hs(a.pass)===s.h)}catch(e){return false}});const [tab,setTab]=useState("maps");const [me,setMe]=useState(()=>{try{const s=JSON.parse(localStorage.getItem(LKEY));return s&&s.u||""}catch(e){return ""}});const [pm,setPm]=useState(false);
+ const [c,setC]=useState(load);const [ok,setOk]=useState(()=>{try{const s=JSON.parse(localStorage.getItem(LKEY)),a=s&&c.accounts[s.u];return !!(a&&a.admin&&(s.o||hs(a.pass||"")===s.h))}catch(e){return false}});const [tab,setTab]=useState("maps");const [me,setMe]=useState(()=>{try{const s=JSON.parse(localStorage.getItem(LKEY));return s&&s.u||""}catch(e){return ""}});const [pm,setPm]=useState(false);const [evs,setEvs]=useState([]);
  useEffect(()=>{try{localStorage.setItem(KEY,JSON.stringify(c))}catch(e){}},[c]);
  const txt=JSON.stringify(c,null,2);const [g,setG]=useState(ghLoad);const [st,setSt]=useState({s:"idle",m:""});const last=useRef(txt);
  useEffect(()=>{try{localStorage.setItem(GK,JSON.stringify(g))}catch(e){}},[g]);
@@ -204,12 +214,15 @@ function App(){
  const sync=async()=>{
   const u=dbn(c.links.db);if(!u||!dbOk(u)){setSt({s:"err",m:"Define primeiro o URL da base de dados em Ligações e Anúncio."});return}
   setSt({s:"run",m:"A sincronizar com o site…"});
-  try{const [pr,mp]=await Promise.all([fetch(u+"/profiles.json",{cache:"no-store"}).then(r=>r.json()),fetch(u+"/maps.json",{cache:"no-store"}).then(r=>r.json())]);
+  try{const J=q=>fetch(u+q,{cache:"no-store"}).then(r=>r.ok?r.json():null).catch(()=>null);
+   const keys=Object.keys(c.accounts);
+   const [pr,mp,lg,...pws]=await Promise.all([J("/profiles.json"),J("/maps.json"),J("/log.json?orderBy=%22%24key%22&limitToLast=15"),...keys.map(k=>J("/pw/"+encodeURIComponent(k)+".json"))]);
    let n=0;const acc={...c.accounts};
    Object.keys(pr||{}).forEach(k=>{const f=pr[k],a=acc[k];if(a&&(f.ts||0)>(a.pu||0)){acc[k]={...a,disp:f.disp!=null?f.disp:a.disp,bio:f.bio!=null?f.bio:a.bio,avatar:f.avatar!=null?f.avatar:a.avatar,faceit:f.faceit!=null?f.faceit:a.faceit,eh:f.eh!=null?f.eh:a.eh,pu:f.ts};n++}});
+   let pn=0;keys.forEach((k,i)=>{const o=pws[i],a=acc[k];if(o&&o.h&&(o.ts||0)>(a.pwts||0)){acc[k]={...a,ph:o.h,pass:"",pwts:o.ts};pn++}});setEvs(lg?Object.keys(lg).sort().reverse().map(x=>lg[x]):[]);
    const mn=mp&&mp.list&&(mp.ts||0)>(c.mapsTs||0);
    setC({...c,accounts:acc,maps:mn?mp.list:c.maps,mapsTs:mn?mp.ts:c.mapsTs});
-   setSt({s:"ok",m:"Sincronizado: "+n+" perfil(s)"+(mn?" e mapas":"")+" atualizado(s)."})}
+   setSt({s:"ok",m:"Sincronizado: "+n+" perfil(s), "+pn+" password(s)"+(mn?" e mapas":"")+" atualizado(s)."})}
   catch(e){setSt({s:"err",m:"Não consegui sincronizar. Confirma o URL da base de dados."})}};
  const pub=async()=>{
   if(!g.owner.trim()||!g.repo.trim()||!g.token.trim()){setSt({s:"err",m:"Preenche utilizador, repositório e token."});return}
@@ -226,7 +239,7 @@ function App(){
   <header class="glass flex flex-wrap items-center gap-3 px-4 py-3" style=${{borderRadius:26,zIndex:30}}><${Logo}/><b>FWT Admin</b>${st.s!=="idle"&&html`<span class="text-xs order-last w-full sm:order-none sm:w-auto sm:ml-2" style=${{color:st.s==="err"?"#f87171":"var(--g)"}}>${st.m}</span>`}${st.s==="idle"&&!(g.owner&&g.token)&&html`<button class="text-xs order-last w-full sm:order-none sm:w-auto sm:ml-2" style=${{color:"#F5A524"}} onClick=${()=>setTab("pub")}>Não ligado ao GitHub</button>`}<div class="ml-auto relative pm"><button class="ghost tap" style=${{padding:".3rem .8rem .3rem .3rem",borderRadius:99}} onClick=${()=>setPm(!pm)}><${AvA} a=${c.accounts[me]} s=${30}/><span class="text-sm font-semibold">${(c.accounts[me]||{}).disp||"Admin"}</span></button>
    ${pm&&html`<div class="glass fade p-2 w-52" style=${{position:"absolute",right:0,marginTop:8,borderRadius:20}}><button class="ghost tap w-full" style=${{justifyContent:"flex-start"}} onClick=${()=>{setTab("accts");setPm(false)}}><${I} n="lock"/> Editar perfil</button><button class="ghost tap w-full mt-1" style=${{justifyContent:"flex-start",color:"#f87171"}} onClick=${()=>{try{localStorage.removeItem(LKEY)}catch(e){}setPm(false);setOk(false)}}><${I} n="out"/> Terminar sessão</button></div>`}</div></header>
   <nav class="glass nav flex gap-1 p-1.5" style=${{borderRadius:22}}>${T.map(([id,l])=>html`<button key=${id} onClick=${()=>setTab(id)} class="tap px-4 py-2 rounded-2xl text-sm font-semibold whitespace-nowrap" style=${{background:tab===id?"var(--g)":"transparent",color:tab===id?"#0d1a04":"var(--tx)"}}>${l}</button>`)}</nav>
-  <${B} c=${c} setC=${setCw} gh=${{g,setG,st,pub,pull,sync}}/></div>`;
+  <${B} c=${c} setC=${setCw} gh=${{g,setG,st,pub,pull,sync,evs}}/></div>`;
 }
 ReactDOM.createRoot(document.getElementById("root")).render(html`<${App}/>`);
 </script></body></html>
